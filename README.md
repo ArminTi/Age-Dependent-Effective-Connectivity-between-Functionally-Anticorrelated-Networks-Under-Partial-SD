@@ -27,7 +27,7 @@ Armin Toghi: Executive member of IDS neuroimaging group, Shahid beheshti Univers
 ### Researchers
 Ghazal Golkar
 Kiana Orangi
-Veida Feizi
+Vida Feizi
 Farnoosh Vosogh
 Armineh Olomi
 
