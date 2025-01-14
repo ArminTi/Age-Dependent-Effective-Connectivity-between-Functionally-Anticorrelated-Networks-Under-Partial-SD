@@ -1,15 +1,16 @@
-# Large-scale-effective-and-functional-connectivity-for-rsfMRI-after-sleep-deprivation
+# Effective-and-functional-connectivity-for-rsfMRI-after-sleep-deprivation
 IDS Neuroimaging department_Project_Team1
 
 ## Network of Interest: 
 
-Default mode, Executive control, Visual, Sensorimotor, Salience, Dorsal attention, Auditory (Raichle et al., 2015).
+Default mode, Dorsal Attention Network, Ventral Attention Network, Action Mode Network, Working Memory Network.
 
 ## Large scale functional connectivity
 Using CONN toolbox
 1. Preprocessing fMRI and MRI data
-2. ROI-to-ROI connectivity between Network of interests
-3. Average functional connectivity between desired networks
+2. Extracting Mask based on Yeo et al 2011, and AAL atlas
+3. ROI-to-ROI connectivity between Network of interests
+4. Average functional connectivity between desired networks
 ## Large scale Dynamic Causal Modelling (Razi et al., 2017)
 Using SPM package
 1. GLM specification
