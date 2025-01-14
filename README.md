@@ -5,7 +5,7 @@ IDS Neuroimaging department_Project_Team1
 
 Default mode, Dorsal Attention Network, Ventral Attention Network, Action Mode Network, Working Memory Network.
 
-## Large scale functional connectivity
+## Functional connectivity
 Using CONN toolbox
 1. Preprocessing fMRI and MRI data
 2. Extracting Mask based on Yeo et al 2011, and AAL atlas
