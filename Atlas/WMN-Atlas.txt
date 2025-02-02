@@ -1,0 +1,10 @@
+1   Angular_R
+2   Frontal_Inf_Oper_L
+3   Frontal_Inf_Oper_R
+4   Frontal_Inf_Tri_L
+5   Frontal_Mid_R
+6   Frontal_Sup_Medial_R
+7   Insula_L
+8   Insula_R
+9   Parietal_Inf_L
+10  Supp_Motor_Area_L
