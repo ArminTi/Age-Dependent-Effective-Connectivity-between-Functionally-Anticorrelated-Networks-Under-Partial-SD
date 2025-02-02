@@ -1,0 +1,64 @@
+To create a desired atlas with the required region masks, follow these steps:
+
+Step(1): Create a mask for each region individually.
+
+Step(2): Use an image calculator, such as the one in Mango software:
+         1- Open Mango
+         2- Click on the "Open" option
+         3- Select the first mask using the "Open Image" option
+         4- Go to the "Image" menu and select "Image Calculator"
+         5- In the calculator: 
+            a) "this" refers to the currently open mask image 
+            b) Multiply it by 1 and set the "this" option before the equal sign to "new" to create a new image
+         6- Click "Run Calculation"
+         7- In the new image: 
+            a) Go to File -> Save As
+            b) Enter a name for your new image
+            c) In the "Misc" section, uncheck the "GZIP" option to save the image as a NIfTI file (not a compressed file)
+            d) Click "Save"
+         8- Repeat this step for the remaining masks, but assign each mask a unique multiplier in sequential order (e.g., multiply the second mask by 2, the third mask by 3, and so on)
+
+Step(3): Create a NIfTI atlas file:
+         1- Open Mango
+         2- Click on the "Open" option
+         3- Select and open all the newly created images from the previous step in order using the "Open Image" option
+         4- In the first image, go to the "Image" menu and select "Image Calculator"
+         5- In the calculator: 
+            a) "this" refers to the currently selected image
+            b) Use the addition operator (+) to combine the images sequentially using the "Others" option (e.g., this + other(1) + other(2) + ...) 
+            c) Set the "this" option before the equal sign to "new" to create a combined image
+         6- Click "Run Calculation"
+         7- In the new image: 
+            a) Go to File -> Save As
+            b) Enter a name for the desired atlas image 
+            c) In the "Misc" section, uncheck the "GZIP" option to save the image as a NIfTI file (not a compressed file)
+            d) Click "Save" 
+
+Step(4): Create a text file with the same name as the NIfTI atlas file:
+         1- List the region names in the same order as the images entered in the atlas
+         2- Assign each region a corresponding number and separate the number from the name using a tab
+         Example: 1	Angular_R
+                  2	Supp_Motor_Area_L
+
+Step(5): Move the NIfTI file and the text file of the desired atlas:
+         Place both files in the "rois" folder of Conn, located in the directory where the Conn toolbox is installed.
+
+Step(6): Import the atlas in the Conn toolbox:
+         1- Go to the SETUP section
+         2- In the ROIs part, define a new ROI:
+            a) Enter the name of the desired atlas
+            b) Under Advanced Options, enable the "Atlas file" checkbox
+            c) Import the desired NIfTI atlas file
+
+Step(7): Verify anatomical and functional coregistration:
+         a) Go to ROI tools -> Display ROI/anatomical coregistration
+         b) Go to ROI tools -> Display ROI/functional coregistration
+
+
+
+If you have any further questions, feel free to reach out at: golkar.gh@gmail.com
+Best, 
+Ghazal
+MS in Cognitive Science from Shahid Beheshti University
+
+
