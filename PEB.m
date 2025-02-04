@@ -66,9 +66,12 @@ for roiIdx = 1:length(roiGroups)
     field = {'A'}; % Specify which parameters to analyze
     PEB_young_first = spm_dcm_peb(GCM_struct.(sprintf('GCM_young_%s', roiGroup)), M_young_first, field);
     PEB_struct.(sprintf('PEB_young_%s', roiGroup)) = PEB_young_first;
-
-    % Review results
-    spm_dcm_peb_review(PEB_young_first);
+    BMA_result_young = spm_dcm_peb_bmc(PEB_young_first);
+    
+    % Review results for Young Group and wait for Enter to continue
+    spm_dcm_peb_review(BMA_result_young); 
+    input('Press Enter to continue to the next result...');
+    close(gcf); % Close review window automatically
 
     % **First-Level Analysis: Old Group**
     num_old = length(GCM_struct.(sprintf('GCM_old_%s', roiGroup)));
@@ -86,9 +89,12 @@ for roiIdx = 1:length(roiGroups)
 
     PEB_old_first = spm_dcm_peb(GCM_struct.(sprintf('GCM_old_%s', roiGroup)), M_old_first, field);
     PEB_struct.(sprintf('PEB_old_%s', roiGroup)) = PEB_old_first;
-
-    % Review results
-    spm_dcm_peb_review(PEB_old_first);
+    BMA_result_old = spm_dcm_peb_bmc(PEB_old_first);
+    
+    % Review results for Old Group and wait for Enter to continue
+    spm_dcm_peb_review(BMA_result_old);
+    input('Press Enter to continue to the next result...');
+    close(gcf); % Close review window automatically
 
     % **Second-Level Analysis: Young vs. Old Comparison**
     PEB_combined = {PEB_young_first; PEB_old_first};
@@ -111,12 +117,10 @@ for roiIdx = 1:length(roiGroups)
     BMA_result = spm_dcm_peb_bmc(PEB_second);
     BMA_struct.(sprintf('BMA_%s', roiGroup)) = BMA_result;
 
-    % Review second-level results
-    
+    % Review results for Second-level analysis and wait for Enter to continue
     spm_dcm_peb_review(BMA_result);
-    
-
-
+    input('Press Enter to continue...');
+    close(gcf); % Close review window automatically
 end
 
 % -------------------------------
