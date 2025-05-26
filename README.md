@@ -3,7 +3,7 @@ IDS Neuroimaging department_Project_Team1
 
 ## Network of Interest: 
 
-Default mode, Dorsal Attention Network, Ventral Attention Network, Action Mode Network, Working Memory Network.
+Default mode, Dorsal Attention Network, Salience network
 
 ## Functional connectivity
 Using CONN toolbox
