@@ -1,24 +1,21 @@
-# Effective-and-functional-connectivity-for-rsfMRI-after-sleep-deprivation
+# Age-Dependent Effective Connectivity between Functionally Anticorrelated Networks Under Partial Sleep Deprivation
 IDS Neuroimaging department_Project_Team1
 
 ## Network of Interest: 
 
 Default mode, Dorsal Attention Network, Salience network
 
-## Functional connectivity
+## Analaysis Pipline
 Using CONN toolbox
-1. Preprocessing fMRI and MRI data
-2. Extracting Mask based on Yeo et al 2011, and AAL atlas
-3. ROI-to-ROI connectivity between Network of interests
-4. Average functional connectivity between desired networks
-## Large scale Dynamic Causal Modelling (Razi et al., 2017)
+1. Preprocessing fMRI and MRI data using CONN
+2. Denoising and high-pass filtering
+3. Extract time series from DMN, DAN, and SN nodes
 Using SPM package
-1. GLM specification
-2. Masks
-3. Model specification
-4. Model estimation
-5. Group level analysis (Bayesian model reduction & subsequent Peb of Peb)
-6. Average effective connectivity between desired networks
+4. Import time series to SPM package
+5. Model specification
+6. Model estimation
+7. Group level analysis (BMA+BMR)
+8. Average effective connectivity between desired networks
 
 ## Team members
 ### Supervisor
