@@ -6,7 +6,7 @@ IDS Neuroimaging department_Project_Team1
 Default mode, Dorsal Attention Network, Salience network
 
 ## Analysis Pipline
-Using CONN toolbox
+
 1. Preprocessing fMRI and MRI data using CONN
 2. Denoising and high-pass filtering
 3. Extract time series from DMN, DAN, and SN nodes
