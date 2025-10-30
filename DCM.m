@@ -3,7 +3,7 @@ TR = 2.5; % Repetition time
 TE = 0.03; % Echo time
 rootDataPath = "C:\Users\Vida\Desktop\aida"; 
 TIME = tic;
-% Define ROIs (only one group)
+% Define ROIs 
 desiredROIs = {'networks.DefaultMode.MPFC (1,55,-3)', 'networks.DefaultMode.LP (L) (-39,-77,33)', ...
     'networks.DefaultMode.LP (R) (47,-67,29)', 'networks.DefaultMode.PCC (1,-61,38)', ...
      'networks.DorsalAttention.FEF (L)  (-27,-9,64)', 'networks.DorsalAttention.FEF (R)  (30,-6,64)', ...
@@ -16,9 +16,9 @@ desiredROIs = {'networks.DefaultMode.MPFC (1,55,-3)', 'networks.DefaultMode.LP (
      'networks.Salience.SMG (L) (-60,-39,31)', 
      'networks.Salience.SMG (R) (62,-35,32)'
     };
-roiGroupName = 'DMN_DAN_SN'; % Combined name since it includes both DMN and DAN ROIs
+roiGroupName = 'DMN_DAN_SN'; 
 
-% Define possible groups and sessions
+% Define groups and sessions
 possibleGroups = {'young', 'old'};
 sessions = {'sleep_deprived', 'full_sleep'};
 
@@ -166,3 +166,4 @@ end
 %  Email: vFeizii75@gmail.com
 
 % -------------------------------
+
