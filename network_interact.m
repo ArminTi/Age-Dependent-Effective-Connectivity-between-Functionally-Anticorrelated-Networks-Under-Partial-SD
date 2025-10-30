@@ -466,3 +466,9 @@ function [sources, targets, edge_weights] = create_hierarchy_edges(hierarchy_val
 end
 
 
+% -------------------------------
+%  Author: Vida Feizi
+%  Affiliation: M.Sc. Student, Computer Engineering, University of Tabriz
+%  Email: vFeizii75@gmail.com
+% -------------------------------
+
