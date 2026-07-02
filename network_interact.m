@@ -11,8 +11,7 @@ SN = 9:15;
 network_names = {'DMN', 'DAN', 'SN'};
  
 threshold = 0.99;
-
-% آماده‌سازی متغیرها برای ذخیره نتایج سلسله‌مراتب
+  
 hierarchy_results_old = zeros(3, 3); % Rows: DMN, DAN, SN | Cols: Cov1, Cov2, Cov3
 hierarchy_results_young = zeros(3, 3);
 
