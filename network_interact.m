@@ -1,470 +1,225 @@
 clear all;
 clc;
-close all;
+close all; 
 
-load('BMA_young.mat');
+load('BMA_young.mat'); 
 load('BMA_old.mat');
-
-roiLabels = {'MPFC', 'LP(L)', 'LP(R)', 'PCC', 'FEF(L)', 'FEF(R)', 'IPS(L)', 'IPS(R)', ...
-             'ACC', 'AInsula(L)', 'AInsula(R)', 'RPFC(L)', 'RPFC(R)', 'SMG(L)', 'SMG(R)'};
-
-DMN = 1:4;   % (MPFC, LP(L), LP(R), PCC)
-DAN = 5:8;   % (FEF(L), FEF(R), IPS(L), IPS(R))
-SN = 9:15;   % (ACC, AInsula(L), AInsula(R), RPFC(L), RPFC(R), SMG(L), SMG(R))
-
+ 
+DMN = 1:4;
+DAN = 5:8;
+SN = 9:15;
+network_names = {'DMN', 'DAN', 'SN'};
+ 
 threshold = 0.99;
 
-%% Analysis for Old Group
-Ep = BMA_old.Ep;
-Pp = BMA_old.Pp;
+% آماده‌سازی متغیرها برای ذخیره نتایج سلسله‌مراتب
+hierarchy_results_old = zeros(3, 3); % Rows: DMN, DAN, SN | Cols: Cov1, Cov2, Cov3
+hierarchy_results_young = zeros(3, 3);
 
-M_cov1 = full(reshape(Ep(1:225), [15, 15]));        % MeanEffect
-M_cov2 = full(reshape(Ep(226:450), [15, 15]));      % SleepDeprivationEffect
-M_cov3 = full(reshape(Ep(451:675), [15, 15]));      % KSSScore
-Pp_cov1 = full(reshape(Pp(1:225), [15, 15]));
-Pp_cov2 = full(reshape(Pp(226:450), [15, 15]));
-Pp_cov3 = full(reshape(Pp(451:675), [15, 15]));
+%% ====================  
+ 
+Ep_old = BMA_old.Ep; %     
+Pp_old = BMA_old.Pp;  
+ 
+M_cov1_old = reshape(Ep_old(1:225), 15, 15); % Mean Effect
+M_cov2_old = reshape(Ep_old(226:450), 15, 15); % Sleep Deprivation Effect
+M_cov3_old = reshape(Ep_old(451:675), 15, 15); % FD Effect
+ 
+Pp_cov1_old = reshape(Pp_old(1:225), 15, 15);
+Pp_cov2_old = reshape(Pp_old(226:450), 15, 15);
+Pp_cov3_old = reshape(Pp_old(451:675), 15, 15);
+ 
+M_cov1_old(Pp_cov1_old <= threshold) = 0;
+M_cov2_old(Pp_cov2_old <= threshold) = 0;
+M_cov3_old(Pp_cov3_old <= threshold) = 0;
 
-M_cov1(Pp_cov1 <= threshold) = 0;
-M_cov2(Pp_cov2 <= threshold) = 0;
-M_cov3(Pp_cov3 <= threshold) = 0;
+all_M_cov_old = {M_cov1_old, M_cov2_old, M_cov3_old};
+cov_names = {'Mean Effect', 'Sleep Deprivation Effect', 'FD Effect'};
 
-% Covariance 1 (MeanEffect)
-% Reversed: M_cov1(DAN, DMN) for DMN -> DAN, meaning from DAN to DMN in standard convention
-avg_out_DMN_DAN_cov1_old = safe_mean(M_cov1(DAN, DMN));
-avg_out_DMN_SN_cov1_old = safe_mean(M_cov1(SN, DMN));
-avg_out_DMN_cov1_old = safe_mean([avg_out_DMN_DAN_cov1_old; avg_out_DMN_SN_cov1_old]);
-avg_in_DAN_DMN_cov1_old = safe_mean(M_cov1(DMN, DAN));
-avg_in_SN_DMN_cov1_old = safe_mean(M_cov1(DMN, SN));
-avg_in_DMN_cov1_old = safe_mean([avg_in_DAN_DMN_cov1_old; avg_in_SN_DMN_cov1_old]);
-hierarchy_DMN_cov1_old = abs(avg_in_DMN_cov1_old) - abs(avg_out_DMN_cov1_old);
+for c = 1:3 % Loop through each covariance matrix
+    
+    M_cov = all_M_cov_old{c};
+    disp(['---------- ' cov_names{c} ' (Old) ----------']);
+     
+    out_DMN_to_DAN = M_cov(DAN, DMN);
+    out_DMN_to_SN = M_cov(SN, DMN);
+    avg_out_DMN_old = safe_mean([out_DMN_to_DAN(:); out_DMN_to_SN(:)]);
+    
+    
+    in_DMN_from_DAN = M_cov(DMN, DAN);
+    in_DMN_from_SN = M_cov(DMN, SN);
+    avg_in_DMN_old = safe_mean([in_DMN_from_DAN(:); in_DMN_from_SN(:)]);
+    
+    
+    out_DAN_to_DMN = M_cov(DMN, DAN);
+    out_DAN_to_SN = M_cov(SN, DAN);
+    avg_out_DAN_old = safe_mean([out_DAN_to_DMN(:); out_DAN_to_SN(:)]);
 
-avg_out_DAN_DMN_cov1_old = safe_mean(M_cov1(DMN, DAN));
-avg_out_DAN_SN_cov1_old = safe_mean(M_cov1(SN, DAN));
-avg_out_DAN_cov1_old = safe_mean([avg_out_DAN_DMN_cov1_old; avg_out_DAN_SN_cov1_old]);
-avg_in_DMN_DAN_cov1_old = safe_mean(M_cov1(DAN, DMN));
-avg_in_SN_DAN_cov1_old = safe_mean(M_cov1(DAN, SN));
-avg_in_DAN_cov1_old = safe_mean([avg_in_DMN_DAN_cov1_old; avg_in_SN_DAN_cov1_old]);
-hierarchy_DAN_cov1_old = abs(avg_in_DAN_cov1_old) - abs(avg_out_DAN_cov1_old);
-
-avg_out_SN_DMN_cov1_old = safe_mean(M_cov1(DMN, SN));
-avg_out_SN_DAN_cov1_old = safe_mean(M_cov1(DAN, SN));
-avg_out_SN_cov1_old = safe_mean([avg_out_SN_DMN_cov1_old; avg_out_SN_DAN_cov1_old]);
-avg_in_DMN_SN_cov1_old = safe_mean(M_cov1(SN, DMN));
-avg_in_DAN_SN_cov1_old = safe_mean(M_cov1(SN, DAN));
-avg_in_SN_cov1_old = safe_mean([avg_in_DMN_SN_cov1_old; avg_in_DAN_SN_cov1_old]);
-hierarchy_SN_cov1_old = abs(avg_in_SN_cov1_old) - abs(avg_out_SN_cov1_old);
-
-% Display connectivity table for Covariance 1
-disp('Old Group - Mean Effect Connectivity:');
-T_old_cov1 = table({'DMN -> DAN'; 'DMN -> SN'; 'DAN -> DMN'; 'DAN -> SN'; 'SN -> DMN'; 'SN -> DAN'}, ...
-    [avg_out_DMN_DAN_cov1_old; avg_out_DMN_SN_cov1_old; avg_out_DAN_DMN_cov1_old; ...
-     avg_out_DAN_SN_cov1_old; avg_out_SN_DMN_cov1_old; avg_out_SN_DAN_cov1_old], ...
-    'VariableNames', {'Connection', 'Average_Weight'});
-disp(T_old_cov1);
-
-% Covariance 2 (SleepDeprivationEffect)
-avg_out_DMN_DAN_cov2_old = safe_mean(M_cov2(DAN, DMN));
-avg_out_DMN_SN_cov2_old = safe_mean(M_cov2(SN, DMN));
-avg_out_DMN_cov2_old = safe_mean([avg_out_DMN_DAN_cov2_old; avg_out_DMN_SN_cov2_old]);
-avg_in_DAN_DMN_cov2_old = safe_mean(M_cov2(DMN, DAN));
-avg_in_SN_DMN_cov2_old = safe_mean(M_cov2(DMN, SN));
-avg_in_DMN_cov2_old = safe_mean([avg_in_DAN_DMN_cov2_old; avg_in_SN_DMN_cov2_old]);
-hierarchy_DMN_cov2_old = abs(avg_in_DMN_cov2_old) - abs(avg_out_DMN_cov2_old);
-
-avg_out_DAN_DMN_cov2_old = safe_mean(M_cov2(DMN, DAN));
-avg_out_DAN_SN_cov2_old = safe_mean(M_cov2(SN, DAN));
-avg_out_DAN_cov2_old = safe_mean([avg_out_DAN_DMN_cov2_old; avg_out_DAN_SN_cov2_old]);
-avg_in_DMN_DAN_cov2_old = safe_mean(M_cov2(DAN, DMN));
-avg_in_SN_DAN_cov2_old = safe_mean(M_cov2(DAN, SN));
-avg_in_DAN_cov2_old = safe_mean([avg_in_DMN_DAN_cov2_old; avg_in_SN_DAN_cov2_old]);
-hierarchy_DAN_cov2_old = abs(avg_in_DAN_cov2_old) - abs(avg_out_DAN_cov2_old);
-
-avg_out_SN_DMN_cov2_old = safe_mean(M_cov2(DMN, SN));
-avg_out_SN_DAN_cov2_old = safe_mean(M_cov2(DAN, SN));
-avg_out_SN_cov2_old = safe_mean([avg_out_SN_DMN_cov2_old; avg_out_SN_DAN_cov2_old]);
-avg_in_DMN_SN_cov2_old = safe_mean(M_cov2(SN, DMN));
-avg_in_DAN_SN_cov2_old = safe_mean(M_cov2(SN, DAN));
-avg_in_SN_cov2_old = safe_mean([avg_in_DMN_SN_cov2_old; avg_in_DAN_SN_cov2_old]);
-hierarchy_SN_cov2_old = abs(avg_in_SN_cov2_old) - abs(avg_out_SN_cov2_old);
-
-% Display connectivity table for Covariance 2
-disp('Old Group - Sleep Deprivation Effect Connectivity:');
-T_old_cov2 = table({'DMN -> DAN'; 'DMN -> SN'; 'DAN -> DMN'; 'DAN -> SN'; 'SN -> DMN'; 'SN -> DAN'}, ...
-    [avg_out_DMN_DAN_cov2_old; avg_out_DMN_SN_cov2_old; avg_out_DAN_DMN_cov2_old; ...
-     avg_out_DAN_SN_cov2_old; avg_out_SN_DMN_cov2_old; avg_out_SN_DAN_cov2_old], ...
-    'VariableNames', {'Connection', 'Average_Weight'});
-disp(T_old_cov2);
-
-% Covariance 3 (KSSScore)
-avg_out_DMN_DAN_cov3_old = safe_mean(M_cov3(DAN, DMN));
-avg_out_DMN_SN_cov3_old = safe_mean(M_cov3(SN, DMN));
-avg_out_DMN_cov3_old = safe_mean([avg_out_DMN_DAN_cov3_old; avg_out_DMN_SN_cov3_old]);
-avg_in_DAN_DMN_cov3_old = safe_mean(M_cov3(DMN, DAN));
-avg_in_SN_DMN_cov3_old = safe_mean(M_cov3(DMN, SN));
-avg_in_DMN_cov3_old = safe_mean([avg_in_DAN_DMN_cov3_old; avg_in_SN_DMN_cov3_old]);
-hierarchy_DMN_cov3_old = abs(avg_in_DMN_cov3_old) - abs(avg_out_DMN_cov3_old);
-
-avg_out_DAN_DMN_cov3_old = safe_mean(M_cov3(DMN, DAN));
-avg_out_DAN_SN_cov3_old = safe_mean(M_cov3(SN, DAN));
-avg_out_DAN_cov3_old = safe_mean([avg_out_DAN_DMN_cov3_old; avg_out_DAN_SN_cov3_old]);
-avg_in_DMN_DAN_cov3_old = safe_mean(M_cov3(DAN, DMN));
-avg_in_SN_DAN_cov3_old = safe_mean(M_cov3(DAN, SN));
-avg_in_DAN_cov3_old = safe_mean([avg_in_DMN_DAN_cov3_old; avg_in_SN_DAN_cov3_old]);
-hierarchy_DAN_cov3_old = abs(avg_in_DAN_cov3_old) - abs(avg_out_DAN_cov3_old);
-
-avg_out_SN_DMN_cov3_old = safe_mean(M_cov3(DMN, SN));
-avg_out_SN_DAN_cov3_old = safe_mean(M_cov3(DAN, SN));
-avg_out_SN_cov3_old = safe_mean([avg_out_SN_DMN_cov3_old; avg_out_SN_DAN_cov3_old]);
-avg_in_DMN_SN_cov3_old = safe_mean(M_cov3(SN, DMN));
-avg_in_DAN_SN_cov3_old = safe_mean(M_cov3(SN, DAN));
-avg_in_SN_cov3_old = safe_mean([avg_in_DMN_SN_cov3_old; avg_in_DAN_SN_cov3_old]);
-hierarchy_SN_cov3_old = abs(avg_in_SN_cov3_old) - abs(avg_out_SN_cov3_old);
-
-% Display connectivity table for Covariance 3
-disp('Old Group - KSS Score Connectivity:');
-T_old_cov3 = table({'DMN -> DAN'; 'DMN -> SN'; 'DAN -> DMN'; 'DAN -> SN'; 'SN -> DMN'; 'SN -> DAN'}, ...
-    [avg_out_DMN_DAN_cov3_old; avg_out_DMN_SN_cov3_old; avg_out_DAN_DMN_cov3_old; ...
-     avg_out_DAN_SN_cov3_old; avg_out_SN_DMN_cov3_old; avg_out_SN_DAN_cov3_old], ...
-    'VariableNames', {'Connection', 'Average_Weight'});
-disp(T_old_cov3);
-
-% Directed graphs for Old Group
-weights_old_cov1 = [avg_out_DMN_DAN_cov1_old, avg_out_DMN_SN_cov1_old, avg_out_DAN_DMN_cov1_old, ...
-                    avg_out_DAN_SN_cov1_old, avg_out_SN_DMN_cov1_old, avg_out_SN_DAN_cov1_old];
-weights_old_cov1(isnan(weights_old_cov1)) = 0;
-
-weights_old_cov2 = [avg_out_DMN_DAN_cov2_old, avg_out_DMN_SN_cov2_old, avg_out_DAN_DMN_cov2_old, ...
-                    avg_out_DAN_SN_cov2_old, avg_out_SN_DMN_cov2_old, avg_out_SN_DAN_cov2_old];
-weights_old_cov2(isnan(weights_old_cov2)) = 0;
-
-weights_old_cov3 = [avg_out_DMN_DAN_cov3_old, avg_out_DMN_SN_cov3_old, avg_out_DAN_DMN_cov3_old, ...
-                    avg_out_DAN_SN_cov3_old, avg_out_SN_DMN_cov3_old, avg_out_SN_DAN_cov3_old];
-weights_old_cov3(isnan(weights_old_cov3)) = 0;
-
-node_colors = [0.1, 0.7, 0.3; 0.9, 0.4, 0.2; 0.3, 0.5, 0.8]; % DMN, DAN, SN
-
-figure('Name', 'Old Group Inter-Network Connectivity', 'Color', [0.9 0.9 0.9]);
-subplot(1, 3, 1);
-% Reversed: Edge [1,2] is now DMN -> DAN, which uses avg_out_DMN_DAN (M_cov1(DAN, DMN))
-G_old_cov1 = digraph([1, 1, 2, 2, 3, 3], [2, 3, 1, 3, 1, 2], weights_old_cov1, {'DMN', 'DAN', 'SN'});
-h = plot(G_old_cov1, 'NodeColor', node_colors, 'MarkerSize', 20, 'Marker', 'o', ...
-         'EdgeLabel', G_old_cov1.Edges.Weight, 'NodeFontSize', 14, 'EdgeFontSize', 12, ...
-         'EdgeCData', weights_old_cov1, 'NodeLabel', {});
-colormap([0 0 1; 1 0 0]);
-h.LineWidth = abs(weights_old_cov1) * 5 + 1;
-title('Mean Effect Connectivity (Old Group)', 'FontSize', 14);
-set(gca, 'Color', 'none');
-
-subplot(1, 3, 2);
-G_old_cov2 = digraph([1, 1, 2, 2, 3, 3], [2, 3, 1, 3, 1, 2], weights_old_cov2, {'DMN', 'DAN', 'SN'});
-h = plot(G_old_cov2, 'NodeColor', node_colors, 'MarkerSize', 20, 'Marker', 'o', ...
-         'EdgeLabel', G_old_cov2.Edges.Weight, 'NodeFontSize', 14, 'EdgeFontSize', 12, ...
-         'EdgeCData', weights_old_cov2, 'NodeLabel', {});
-colormap([0 0 1; 1 0 0]);
-h.LineWidth = abs(weights_old_cov2) * 5 + 1;
-title('Sleep Deprivation Effect Connectivity (Old Group)', 'FontSize', 14);
-set(gca, 'Color', 'none');
-
-subplot(1, 3, 3);
-G_old_cov3 = digraph([1, 1, 2, 2, 3, 3], [2, 3, 1, 3, 1, 2], weights_old_cov3, {'DMN', 'DAN', 'SN'});
-h = plot(G_old_cov3, 'NodeColor', node_colors, 'MarkerSize', 20, 'Marker', 'o', ...
-         'EdgeLabel', G_old_cov3.Edges.Weight, 'NodeFontSize', 14, 'EdgeFontSize', 12, ...
-         'EdgeCData', weights_old_cov3, 'NodeLabel', {});
-colormap([0 0 1; 1 0 0]);
-h.LineWidth = abs(weights_old_cov3) * 5 + 1;
-title('KSS Score Connectivity (Old Group)', 'FontSize', 14);
-set(gca, 'Color', 'none');
-
-%% Analysis for Young Group
-Ep = BMA_young.Ep;
-Pp = BMA_young.Pp;
-
-M_cov1 = full(reshape(Ep(1:225), [15, 15]));        % MeanEffect
-M_cov2 = full(reshape(Ep(226:450), [15, 15]));      % SleepDeprivationEffect
-M_cov3 = full(reshape(Ep(451:675), [15, 15]));      % KSSScore
-Pp_cov1 = full(reshape(Pp(1:225), [15, 15]));
-Pp_cov2 = full(reshape(Pp(226:450), [15, 15]));
-Pp_cov3 = full(reshape(Pp(451:675), [15, 15]));
-
-M_cov1(Pp_cov1 <= threshold) = 0;
-M_cov2(Pp_cov2 <= threshold) = 0;
-M_cov3(Pp_cov3 <= threshold) = 0;
-
-% Covariance 1 (MeanEffect)
-avg_out_DMN_DAN_cov1_young = safe_mean(M_cov1(DAN, DMN));
-avg_out_DMN_SN_cov1_young = safe_mean(M_cov1(SN, DMN));
-avg_out_DMN_cov1_young = safe_mean([avg_out_DMN_DAN_cov1_young; avg_out_DMN_SN_cov1_young]);
-avg_in_DAN_DMN_cov1_young = safe_mean(M_cov1(DMN, DAN));
-avg_in_SN_DMN_cov1_young = safe_mean(M_cov1(DMN, SN));
-avg_in_DMN_cov1_young = safe_mean([avg_in_DAN_DMN_cov1_young; avg_in_SN_DMN_cov1_young]);
-hierarchy_DMN_cov1_young = abs(avg_in_DMN_cov1_young) - abs(avg_out_DMN_cov1_young);
-
-avg_out_DAN_DMN_cov1_young = safe_mean(M_cov1(DMN, DAN));
-avg_out_DAN_SN_cov1_young = safe_mean(M_cov1(SN, DAN));
-avg_out_DAN_cov1_young = safe_mean([avg_out_DAN_DMN_cov1_young; avg_out_DAN_SN_cov1_young]);
-avg_in_DMN_DAN_cov1_young = safe_mean(M_cov1(DAN, DMN));
-avg_in_SN_DAN_cov1_young = safe_mean(M_cov1(DAN, SN));
-avg_in_DAN_cov1_young = safe_mean([avg_in_DMN_DAN_cov1_young; avg_in_SN_DAN_cov1_young]);
-hierarchy_DAN_cov1_young = abs(avg_in_DAN_cov1_young) - abs(avg_out_DAN_cov1_young);
-
-avg_out_SN_DMN_cov1_young = safe_mean(M_cov1(DMN, SN));
-avg_out_SN_DAN_cov1_young = safe_mean(M_cov1(DAN, SN));
-avg_out_SN_cov1_young = safe_mean([avg_out_SN_DMN_cov1_young; avg_out_SN_DAN_cov1_young]);
-avg_in_DMN_SN_cov1_young = safe_mean(M_cov1(SN, DMN));
-avg_in_DAN_SN_cov1_young = safe_mean(M_cov1(SN, DAN));
-avg_in_SN_cov1_young = safe_mean([avg_in_DMN_SN_cov1_young; avg_in_DAN_SN_cov1_young]);
-hierarchy_SN_cov1_young = abs(avg_in_SN_cov1_young) - abs(avg_out_SN_cov1_young);
-
-% Display connectivity table for Covariance 1
-disp('Young Group - Mean Effect Connectivity:');
-T_young_cov1 = table({'DMN -> DAN'; 'DMN -> SN'; 'DAN -> DMN'; 'DAN -> SN'; 'SN -> DMN'; 'SN -> DAN'}, ...
-    [avg_out_DMN_DAN_cov1_young; avg_out_DMN_SN_cov1_young; avg_out_DAN_DMN_cov1_young; ...
-     avg_out_DAN_SN_cov1_young; avg_out_SN_DMN_cov1_young; avg_out_SN_DAN_cov1_young], ...
-    'VariableNames', {'Connection', 'Average_Weight'});
-disp(T_young_cov1);
-
-% Covariance 2 (SleepDeprivationEffect)
-avg_out_DMN_DAN_cov2_young = safe_mean(M_cov2(DAN, DMN));
-avg_out_DMN_SN_cov2_young = safe_mean(M_cov2(SN, DMN));
-avg_out_DMN_cov2_young = safe_mean([avg_out_DMN_DAN_cov2_young; avg_out_DMN_SN_cov2_young]);
-avg_in_DAN_DMN_cov2_young = safe_mean(M_cov2(DMN, DAN));
-avg_in_SN_DMN_cov2_young = safe_mean(M_cov2(DMN, SN));
-avg_in_DMN_cov2_young = safe_mean([avg_in_DAN_DMN_cov2_young; avg_in_SN_DMN_cov2_young]);
-hierarchy_DMN_cov2_young = abs(avg_in_DMN_cov2_young) - abs(avg_out_DMN_cov2_young);
-
-avg_out_DAN_DMN_cov2_young = safe_mean(M_cov2(DMN, DAN));
-avg_out_DAN_SN_cov2_young = safe_mean(M_cov2(SN, DAN));
-avg_out_DAN_cov2_young = safe_mean([avg_out_DAN_DMN_cov2_young; avg_out_DAN_SN_cov2_young]);
-avg_in_DMN_DAN_cov2_young = safe_mean(M_cov2(DAN, DMN));
-avg_in_SN_DAN_cov2_young = safe_mean(M_cov2(DAN, SN));
-avg_in_DAN_cov2_young = safe_mean([avg_in_DMN_DAN_cov2_young; avg_in_SN_DAN_cov2_young]);
-hierarchy_DAN_cov2_young = abs(avg_in_DAN_cov2_young) - abs(avg_out_DAN_cov2_young);
-
-avg_out_SN_DMN_cov2_young = safe_mean(M_cov2(DMN, SN));
-avg_out_SN_DAN_cov2_young = safe_mean(M_cov2(DAN, SN));
-avg_out_SN_cov2_young = safe_mean([avg_out_SN_DMN_cov2_young; avg_out_SN_DAN_cov2_young]);
-avg_in_DMN_SN_cov2_young = safe_mean(M_cov2(SN, DMN));
-avg_in_DAN_SN_cov2_young = safe_mean(M_cov2(SN, DAN));
-avg_in_SN_cov2_young = safe_mean([avg_in_DMN_SN_cov2_young; avg_in_DAN_SN_cov2_young]);
-hierarchy_SN_cov2_young = abs(avg_in_SN_cov2_young) - abs(avg_out_SN_cov2_young);
-
-% Display connectivity table for Covariance 2
-disp('Young Group - Sleep Deprivation Effect Connectivity:');
-T_young_cov2 = table({'DMN -> DAN'; 'DMN -> SN'; 'DAN -> DMN'; 'DAN -> SN'; 'SN -> DMN'; 'SN -> DAN'}, ...
-    [avg_out_DMN_DAN_cov2_young; avg_out_DMN_SN_cov2_young; avg_out_DAN_DMN_cov2_young; ...
-     avg_out_DAN_SN_cov2_young; avg_out_SN_DMN_cov2_young; avg_out_SN_DAN_cov2_young], ...
-    'VariableNames', {'Connection', 'Average_Weight'});
-disp(T_young_cov2);
-
-% Covariance 3 (KSSScore)
-avg_out_DMN_DAN_cov3_young = safe_mean(M_cov3(DAN, DMN));
-avg_out_DMN_SN_cov3_young = safe_mean(M_cov3(SN, DMN));
-avg_out_DMN_cov3_young = safe_mean([avg_out_DMN_DAN_cov3_young; avg_out_DMN_SN_cov3_young]);
-avg_in_DAN_DMN_cov3_young = safe_mean(M_cov3(DMN, DAN));
-avg_in_SN_DMN_cov3_young = safe_mean(M_cov3(DMN, SN));
-avg_in_DMN_cov3_young = safe_mean([avg_in_DAN_DMN_cov3_young; avg_in_SN_DMN_cov3_young]);
-hierarchy_DMN_cov3_young = abs(avg_in_DMN_cov3_young) - abs(avg_out_DMN_cov3_young);
-
-avg_out_DAN_DMN_cov3_young = safe_mean(M_cov3(DMN, DAN));
-avg_out_DAN_SN_cov3_young = safe_mean(M_cov3(SN, DAN));
-avg_out_DAN_cov3_young = safe_mean([avg_out_DAN_DMN_cov3_young; avg_out_DAN_SN_cov3_young]);
-avg_in_DMN_DAN_cov3_young = safe_mean(M_cov3(DAN, DMN));
-avg_in_SN_DAN_cov3_young = safe_mean(M_cov3(DAN, SN));
-avg_in_DAN_cov3_young = safe_mean([avg_in_DMN_DAN_cov3_young; avg_in_SN_DAN_cov3_young]);
-hierarchy_DAN_cov3_young = abs(avg_in_DAN_cov3_young) - abs(avg_out_DAN_cov3_young);
-
-avg_out_SN_DMN_cov3_young = safe_mean(M_cov3(DMN, SN));
-avg_out_SN_DAN_cov3_young = safe_mean(M_cov3(DAN, SN));
-avg_out_SN_cov3_young = safe_mean([avg_out_SN_DMN_cov3_young; avg_out_SN_DAN_cov3_young]);
-avg_in_DMN_SN_cov3_young = safe_mean(M_cov3(SN, DMN));
-avg_in_DAN_SN_cov3_young = safe_mean(M_cov3(SN, DAN));
-avg_in_SN_cov3_young = safe_mean([avg_in_DMN_SN_cov3_young; avg_in_DAN_SN_cov3_young]);
-hierarchy_SN_cov3_young = abs(avg_in_SN_cov3_young) - abs(avg_out_SN_cov3_young);
-
-% Display connectivity table for Covariance 3
-disp('Young Group - KSS Score Connectivity:');
-T_young_cov3 = table({'DMN -> DAN'; 'DMN -> SN'; 'DAN -> DMN'; 'DAN -> SN'; 'SN -> DMN'; 'SN -> DAN'}, ...
-    [avg_out_DMN_DAN_cov3_young; avg_out_DMN_SN_cov3_young; avg_out_DAN_DMN_cov3_young; ...
-     avg_out_DAN_SN_cov3_young; avg_out_SN_DMN_cov3_young; avg_out_SN_DAN_cov3_young], ...
-    'VariableNames', {'Connection', 'Average_Weight'});
-disp(T_young_cov3);
-
-% Directed graphs for Young Group
-weights_young_cov1 = [avg_out_DMN_DAN_cov1_young, avg_out_DMN_SN_cov1_young, avg_out_DAN_DMN_cov1_young, ...
-                      avg_out_DAN_SN_cov1_young, avg_out_SN_DMN_cov1_young, avg_out_SN_DAN_cov1_young];
-weights_young_cov1(isnan(weights_young_cov1)) = 0;
-
-weights_young_cov2 = [avg_out_DMN_DAN_cov2_young, avg_out_DMN_SN_cov2_young, avg_out_DAN_DMN_cov2_young, ...
-                      avg_out_DAN_SN_cov2_young, avg_out_SN_DMN_cov2_young, avg_out_SN_DAN_cov2_young];
-weights_young_cov2(isnan(weights_young_cov2)) = 0;
-
-weights_young_cov3 = [avg_out_DMN_DAN_cov3_young, avg_out_DMN_SN_cov3_young, avg_out_DAN_DMN_cov3_young, ...
-                      avg_out_DAN_SN_cov3_young, avg_out_SN_DMN_cov3_young, avg_out_SN_DAN_cov3_young];
-weights_young_cov3(isnan(weights_young_cov3)) = 0;
-
-figure('Name', 'Young Group Inter-Network Connectivity', 'Color', [0.9 0.9 0.9]);
-subplot(1, 3, 1);
-G_young_cov1 = digraph([1, 1, 2, 2, 3, 3], [2, 3, 1, 3, 1, 2], weights_young_cov1, {'DMN', 'DAN', 'SN'});
-h = plot(G_young_cov1, 'NodeColor', node_colors, 'MarkerSize', 20, 'Marker', 'o', ...
-         'EdgeLabel', G_young_cov1.Edges.Weight, 'NodeFontSize', 14, 'EdgeFontSize', 12, ...
-         'EdgeCData', weights_young_cov1, 'NodeLabel', {});
-colormap([0 0 1; 1 0 0]);
-h.LineWidth = abs(weights_young_cov1) * 5 + 1;
-title('Mean Effect Connectivity (Young Group)', 'FontSize', 14);
-set(gca, 'Color', 'none');
-
-subplot(1, 3, 2);
-G_young_cov2 = digraph([1, 1, 2, 2, 3, 3], [2, 3, 1, 3, 1, 2], weights_young_cov2, {'DMN', 'DAN', 'SN'});
-h = plot(G_young_cov2, 'NodeColor', node_colors, 'MarkerSize', 20, 'Marker', 'o', ...
-         'EdgeLabel', G_young_cov2.Edges.Weight, 'NodeFontSize', 14, 'EdgeFontSize', 12, ...
-         'EdgeCData', weights_young_cov2, 'NodeLabel', {});
-colormap([0 0 1; 1 0 0]);
-h.LineWidth = abs(weights_young_cov2) * 5 + 1;
-title('Sleep Deprivation Effect Connectivity (Young Group)', 'FontSize', 14);
-set(gca, 'Color', 'none');
-
-subplot(1, 3, 3);
-G_young_cov3 = digraph([1, 1, 2, 2, 3, 3], [2, 3, 1, 3, 1, 2], weights_young_cov3, {'DMN', 'DAN', 'SN'});
-h = plot(G_young_cov3, 'NodeColor', node_colors, 'MarkerSize', 20, 'Marker', 'o', ...
-         'EdgeLabel', G_young_cov3.Edges.Weight, 'NodeFontSize', 14, 'EdgeFontSize', 12, ...
-         'EdgeCData', weights_young_cov3, 'NodeLabel', {});
-colormap([0 0 1; 1 0 0]);
-h.LineWidth = abs(weights_young_cov3) * 5 + 1;
-title('KSS Score Connectivity (Young Group)', 'FontSize', 14);
-set(gca, 'Color', 'none');
-
-% Hierarchy Directed Graphs
-figure('Name', 'Hierarchy as Directed Graph', 'Color', [0.9 0.9 0.9]);
-subplot(2, 3, 1);
-[hierarchy_sources, hierarchy_targets, hierarchy_weights] = create_hierarchy_edges([hierarchy_DMN_cov1_old, hierarchy_DAN_cov1_old, hierarchy_SN_cov1_old]);
-G_hierarchy_old_cov1 = digraph(hierarchy_sources, hierarchy_targets, hierarchy_weights, {'DMN', 'DAN', 'SN'});
-h = plot(G_hierarchy_old_cov1, 'NodeColor', node_colors, 'MarkerSize', 20, 'Marker', 'o', ...
-         'EdgeLabel', G_hierarchy_old_cov1.Edges.Weight, 'NodeFontSize', 14, 'EdgeFontSize', 12, 'NodeLabel', {});
-h.LineWidth = G_hierarchy_old_cov1.Edges.Weight * 5 + 1;
-title('Hierarchy: Mean Effect (Old Group)', 'FontSize', 14);
-set(gca, 'Color', 'none');
-
-subplot(2, 3, 2);
-[hierarchy_sources, hierarchy_targets, hierarchy_weights] = create_hierarchy_edges([hierarchy_DMN_cov2_old, hierarchy_DAN_cov2_old, hierarchy_SN_cov2_old]);
-G_hierarchy_old_cov2 = digraph(hierarchy_sources, hierarchy_targets, hierarchy_weights, {'DMN', 'DAN', 'SN'});
-h = plot(G_hierarchy_old_cov2, 'NodeColor', node_colors, 'MarkerSize', 20, 'Marker', 'o', ...
-         'EdgeLabel', G_hierarchy_old_cov2.Edges.Weight, 'NodeFontSize', 14, 'EdgeFontSize', 12, 'NodeLabel', {});
-h.LineWidth = G_hierarchy_old_cov2.Edges.Weight * 5 + 1;
-title('Hierarchy: Sleep Deprivation (Old Group)', 'FontSize', 14);
-set(gca, 'Color', 'none');
-
-subplot(2, 3, 3);
-[hierarchy_sources, hierarchy_targets, hierarchy_weights] = create_hierarchy_edges([hierarchy_DMN_cov3_old, hierarchy_DAN_cov3_old, hierarchy_SN_cov3_old]);
-G_hierarchy_old_cov3 = digraph(hierarchy_sources, hierarchy_targets, hierarchy_weights, {'DMN', 'DAN', 'SN'});
-h = plot(G_hierarchy_old_cov3, 'NodeColor', node_colors, 'MarkerSize', 20, 'Marker', 'o', ...
-         'EdgeLabel', G_hierarchy_old_cov3.Edges.Weight, 'NodeFontSize', 14, 'EdgeFontSize', 12, 'NodeLabel', {});
-h.LineWidth = G_hierarchy_old_cov3.Edges.Weight * 5 + 1;
-title('Hierarchy: KSS Score (Old Group)', 'FontSize', 14);
-set(gca, 'Color', 'none');
-
-subplot(2, 3, 4);
-[hierarchy_sources, hierarchy_targets, hierarchy_weights] = create_hierarchy_edges([hierarchy_DMN_cov1_young, hierarchy_DAN_cov1_young, hierarchy_SN_cov1_young]);
-G_hierarchy_young_cov1 = digraph(hierarchy_sources, hierarchy_targets, hierarchy_weights, {'DMN', 'DAN', 'SN'});
-h = plot(G_hierarchy_young_cov1, 'NodeColor', node_colors, 'MarkerSize', 20, 'Marker', 'o', ...
-         'EdgeLabel', G_hierarchy_young_cov1.Edges.Weight, 'NodeFontSize', 14, 'EdgeFontSize', 12, 'NodeLabel', {});
-h.LineWidth = G_hierarchy_young_cov1.Edges.Weight * 5 + 1;
-title('Hierarchy: Mean Effect (Young Group)', 'FontSize', 14);
-set(gca, 'Color', 'none');
-
-subplot(2, 3, 5);
-[hierarchy_sources, hierarchy_targets, hierarchy_weights] = create_hierarchy_edges([hierarchy_DMN_cov2_young, hierarchy_DAN_cov2_young, hierarchy_SN_cov2_young]);
-G_hierarchy_young_cov2 = digraph(hierarchy_sources, hierarchy_targets, hierarchy_weights, {'DMN', 'DAN', 'SN'});
-h = plot(G_hierarchy_young_cov2, 'NodeColor', node_colors, 'MarkerSize', 20, 'Marker', 'o', ...
-         'EdgeLabel', G_hierarchy_young_cov2.Edges.Weight, 'NodeFontSize', 14, 'EdgeFontSize', 12, 'NodeLabel', {});
-h.LineWidth = G_hierarchy_young_cov2.Edges.Weight * 5 + 1;
-title('Hierarchy: Sleep Deprivation (Young Group)', 'FontSize', 14);
-set(gca, 'Color', 'none');
-
-subplot(2, 3, 6);
-[hierarchy_sources, hierarchy_targets, hierarchy_weights] = create_hierarchy_edges([hierarchy_DMN_cov3_young, hierarchy_DAN_cov3_young, hierarchy_SN_cov3_young]);
-G_hierarchy_young_cov3 = digraph(hierarchy_sources, hierarchy_targets, hierarchy_weights, {'DMN', 'DAN', 'SN'});
-h = plot(G_hierarchy_young_cov3, 'NodeColor', node_colors, 'MarkerSize', 20, 'Marker', 'o', ...
-         'EdgeLabel', G_hierarchy_young_cov3.Edges.Weight, 'NodeFontSize', 14, 'EdgeFontSize', 12, 'NodeLabel', {});
-h.LineWidth = G_hierarchy_young_cov3.Edges.Weight * 5 + 1;
-title('Hierarchy: KSS Score (Young Group)', 'FontSize', 14);
-set(gca, 'Color', 'none');
-
-% Bar plots for Hierarchy Comparison
-figure('Name', 'Hierarchy Comparison', 'Color', [0.9 0.9 0.9]);
-subplot(1, 3, 1);
-bar([hierarchy_DMN_cov1_old, hierarchy_DAN_cov1_old, hierarchy_SN_cov1_old; ...
-     hierarchy_DMN_cov1_young, hierarchy_DAN_cov1_young, hierarchy_SN_cov1_young]');
-set(gca, 'XTickLabel', {'DMN', 'DAN', 'SN'}, 'FontSize', 12);
-legend('Old Group', 'Young Group', 'FontSize', 10);
-title('Hierarchy (Mean Effect)', 'FontSize', 14);
-ylabel('Hierarchy Index', 'FontSize', 12);
-
-subplot(1, 3, 2);
-bar([hierarchy_DMN_cov2_old, hierarchy_DAN_cov2_old, hierarchy_SN_cov2_old; ...
-     hierarchy_DMN_cov2_young, hierarchy_DAN_cov2_young, hierarchy_SN_cov2_young]');
-set(gca, 'XTickLabel', {'DMN', 'DAN', 'SN'}, 'FontSize', 12);
-legend('Old Group', 'Young Group', 'FontSize', 10);
-title('Hierarchy (Sleep Deprivation Effect)', 'FontSize', 14);
-ylabel('Hierarchy Index', 'FontSize', 12);
-
-subplot(1, 3, 3);
-bar([hierarchy_DMN_cov3_old, hierarchy_DAN_cov3_old, hierarchy_SN_cov3_old; ...
-     hierarchy_DMN_cov3_young, hierarchy_DAN_cov3_young, hierarchy_SN_cov3_young]');
-set(gca, 'XTickLabel', {'DMN', 'DAN', 'SN'}, 'FontSize', 12);
-legend('Old Group', 'Young Group', 'FontSize', 10);
-title('Hierarchy (KSS Score)', 'FontSize', 14);
-ylabel('Hierarchy Index', 'FontSize', 12);
-
-% Display hierarchy results in console
-disp('Hierarchy for Old Group:');
-disp(['DMN (MeanEffect): ', num2str(hierarchy_DMN_cov1_old)]);
-disp(['DAN (MeanEffect): ', num2str(hierarchy_DAN_cov1_old)]);
-disp(['SN (MeanEffect): ', num2str(hierarchy_SN_cov1_old)]);
-disp(['DMN (SleepDeprivationEffect): ', num2str(hierarchy_DMN_cov2_old)]);
-disp(['DAN (SleepDeprivationEffect): ', num2str(hierarchy_DAN_cov2_old)]);
-disp(['SN (SleepDeprivationEffect): ', num2str(hierarchy_SN_cov2_old)]);
-disp(['DMN (KSSScore): ', num2str(hierarchy_DMN_cov3_old)]);
-disp(['DAN (KSSScore): ', num2str(hierarchy_DAN_cov3_old)]);
-disp(['SN (KSSScore): ', num2str(hierarchy_SN_cov3_old)]);
-
-disp('Hierarchy for Young Group:');
-disp(['DMN (MeanEffect): ', num2str(hierarchy_DMN_cov1_young)]);
-disp(['DAN (MeanEffect): ', num2str(hierarchy_DAN_cov1_young)]);
-disp(['SN (MeanEffect): ', num2str(hierarchy_SN_cov1_young)]);
-disp(['DMN (SleepDeprivationEffect): ', num2str(hierarchy_DMN_cov2_young)]);
-disp(['DAN (SleepDeprivationEffect): ', num2str(hierarchy_DAN_cov2_young)]);
-disp(['SN (SleepDeprivationEffect): ', num2str(hierarchy_SN_cov2_young)]);
-disp(['DMN (KSSScore): ', num2str(hierarchy_DMN_cov3_young)]);
-disp(['DAN (KSSScore): ', num2str(hierarchy_DAN_cov3_young)]);
-disp(['SN (KSSScore): ', num2str(hierarchy_SN_cov3_young)]);
-
-%% Helper function
-function avg = safe_mean(data)
-    data = full(double(data));
-    if nnz(data) == 0
-        avg = 0;
-    else
-        avg = sum(data(:)) / nnz(data);
-    end
-    avg = double(avg);
+    % اتصالات ورودی (از دیگران به DAN)
+    in_DAN_from_DMN = M_cov(DAN, DMN);
+    in_DAN_from_SN = M_cov(DAN, SN);
+    avg_in_DAN_old = safe_mean([in_DAN_from_DMN(:); in_DAN_from_SN(:)]);
+    
+ 
+    out_SN_to_DMN = M_cov(DMN, SN);
+    out_SN_to_DAN = M_cov(DAN, SN);
+    avg_out_SN_old = safe_mean([out_SN_to_DMN(:); out_SN_to_DAN(:)]);
+ 
+    in_SN_from_DMN = M_cov(SN, DMN);
+    in_SN_from_DAN = M_cov(SN, DAN);
+    avg_in_SN_old = safe_mean([in_SN_from_DMN(:); in_SN_from_DAN(:)]);
+ 
+    % Hierarchy = |mean(outgoing)| - |mean(incoming)|
+    hierarchy_DMN = abs(avg_out_DMN_old) - abs(avg_in_DMN_old);
+    hierarchy_DAN = abs(avg_out_DAN_old) - abs(avg_in_DAN_old);
+    hierarchy_SN = abs(avg_out_SN_old) - abs(avg_in_SN_old);
+    
+    hierarchy_results_old(:, c) = [hierarchy_DMN; hierarchy_DAN; hierarchy_SN];
+     
+    From = {'DMN'; 'DMN'; 'DAN'; 'DAN'; 'SN'; 'SN'};
+    To = {'DAN'; 'SN'; 'DMN'; 'SN'; 'DMN'; 'DAN'};
+    Mean_Connectivity = [
+        safe_mean(out_DMN_to_DAN(:)); safe_mean(out_DMN_to_SN(:));
+        safe_mean(out_DAN_to_DMN(:)); safe_mean(out_DAN_to_SN(:));
+        safe_mean(out_SN_to_DMN(:)); safe_mean(out_SN_to_DAN(:))
+    ];
+    tbl = table(From, To, Mean_Connectivity);
+    disp(tbl);
+     
+    disp(['DMN: ', num2str(hierarchy_DMN)]);
+    disp(['DAN: ', num2str(hierarchy_DAN)]);
+    disp(['SN:  ', num2str(hierarchy_SN)]);
+    disp('------------------------------------');
 end
 
-function [sources, targets, edge_weights] = create_hierarchy_edges(hierarchy_values)
-    sources = [];
-    targets = [];
-    edge_weights = [];
-    for i = 1:3
-        for j = 1:3
-            if i ~= j && hierarchy_values(i) < hierarchy_values(j)
-                sources = [sources; i];
-                targets = [targets; j];
-                edge_weights = [edge_weights; abs(hierarchy_values(j) - hierarchy_values(i))];
+
+%% ======================= 
+ 
+Ep_young = BMA_young.Ep;
+Pp_young = BMA_young.Pp;
+ 
+M_cov1_young = reshape(Ep_young(1:225), 15, 15);
+M_cov2_young = reshape(Ep_young(226:450), 15, 15);
+M_cov3_young = reshape(Ep_young(451:675), 15, 15);
+
+Pp_cov1_young = reshape(Pp_young(1:225), 15, 15);
+Pp_cov2_young = reshape(Pp_young(226:450), 15, 15);
+Pp_cov3_young = reshape(Pp_young(451:675), 15, 15); 
+
+M_cov1_young(Pp_cov1_young <= threshold) = 0;
+M_cov2_young(Pp_cov2_young <= threshold) = 0;
+M_cov3_young(Pp_cov3_young <= threshold) = 0;
+
+all_M_cov_young = {M_cov1_young, M_cov2_young, M_cov3_young};
+
+for c = 1:3  
+    
+    M_cov = all_M_cov_young{c};
+    disp(['---------- ' cov_names{c} ' (Young) ----------']);
+     
+    out_DMN_to_DAN = M_cov(DAN, DMN);
+    out_DMN_to_SN = M_cov(SN, DMN);
+    avg_out_DMN_young = safe_mean([out_DMN_to_DAN(:); out_DMN_to_SN(:)]);
+    
+    in_DMN_from_DAN = M_cov(DMN, DAN);
+    in_DMN_from_SN = M_cov(DMN, SN);
+    avg_in_DMN_young = safe_mean([in_DMN_from_DAN(:); in_DMN_from_SN(:)]);
+     
+    out_DAN_to_DMN = M_cov(DMN, DAN);
+    out_DAN_to_SN = M_cov(SN, DAN);
+    avg_out_DAN_young = safe_mean([out_DAN_to_DMN(:); out_DAN_to_SN(:)]);
+
+    in_DAN_from_DMN = M_cov(DAN, DMN);
+    in_DAN_from_SN = M_cov(DAN, SN);
+    avg_in_DAN_young = safe_mean([in_DAN_from_DMN(:); in_DAN_from_SN(:)]);
+     
+    out_SN_to_DMN = M_cov(DMN, SN);
+    out_SN_to_DAN = M_cov(DAN, SN);
+    avg_out_SN_young = safe_mean([out_SN_to_DMN(:); out_SN_to_DAN(:)]);
+
+    in_SN_from_DMN = M_cov(SN, DMN);
+    in_SN_from_DAN = M_cov(SN, DAN);
+    avg_in_SN_young = safe_mean([in_SN_from_DMN(:); in_SN_from_DAN(:)]);
+ 
+    hierarchy_DMN = abs(avg_out_DMN_young) - abs(avg_in_DMN_young);
+    hierarchy_DAN = abs(avg_out_DAN_young) - abs(avg_in_DAN_young);
+    hierarchy_SN = abs(avg_out_SN_young) - abs(avg_in_SN_young);
+    
+    hierarchy_results_young(:, c) = [hierarchy_DMN; hierarchy_DAN; hierarchy_SN];
+     
+    From = {'DMN'; 'DMN'; 'DAN'; 'DAN'; 'SN'; 'SN'};
+    To = {'DAN'; 'SN'; 'DMN'; 'SN'; 'DMN'; 'DAN'};
+    Mean_Connectivity = [
+        safe_mean(out_DMN_to_DAN(:)); safe_mean(out_DMN_to_SN(:));
+        safe_mean(out_DAN_to_DMN(:)); safe_mean(out_DAN_to_SN(:));
+        safe_mean(out_SN_to_DMN(:)); safe_mean(out_SN_to_DAN(:))
+    ];
+    tbl = table(From, To, Mean_Connectivity);
+    disp(tbl);
+     
+    disp(['DMN: ', num2str(hierarchy_DMN)]);
+    disp(['DAN: ', num2str(hierarchy_DAN)]);
+    disp(['SN:  ', num2str(hierarchy_SN)]);
+    disp('------------------------------------');
+end
+
+
+%% =======   
+figure('Name', '  (Mean Effect)', 'Position', [100, 100, 800, 600]);
+bar_data = [hierarchy_results_old(:,1), hierarchy_results_young(:,1)];
+b = bar(bar_data);
+set(gca, 'xticklabel', network_names);
+legend('Old Group', 'Young Group');
+title('Hierarchy Strength Comparison (Mean Effect)');
+ylabel('Hierarchy Value (|Out| - |In|)');
+grid on;
+ 
+figure('Name', 'Graph heir', 'Position', [950, 100, 1000, 500]);
+
+% گراف گروه Old
+subplot(1, 2, 1);
+G_old = create_hierarchy_edges(hierarchy_results_old(:,1), network_names);
+p_old = plot(G_old, 'Layout', 'force', 'EdgeLabel', G_old.Edges.Weight);
+title('Hierarchy Graph - Old Group (Mean Effect)');
+p_old.NodeColor = 'r';
+ 
+subplot(1, 2, 2);
+G_young = create_hierarchy_edges(hierarchy_results_young(:,1), network_names);
+p_young = plot(G_young, 'Layout', 'force', 'EdgeLabel', G_young.Edges.Weight);
+title('Hierarchy Graph - Young Group (Mean Effect)');
+p_young.NodeColor = 'b';
+
+
+%% ============================================== 
+
+function m = safe_mean(data) 
+    non_zero_data = data(data ~= 0);
+    if isempty(non_zero_data)
+        m = 0;
+    else
+        m = mean(non_zero_data);
+    end
+end
+
+function G = create_hierarchy_edges(hierarchy_values, names) 
+    num_nodes = length(hierarchy_values);
+    s = []; % Source nodes
+    t = []; % Target nodes
+    weights = []; % Edge weights
+    for i = 1:num_nodes
+        for j = 1:num_nodes
+            if i ~= j
+                if hierarchy_values(i) < hierarchy_values(j)
+                    s = [s, i];
+                    t = [t, j];
+                    weights = [weights, abs(hierarchy_values(j) - hierarchy_values(i))];
+                end
             end
         end
     end
+    G = digraph(s, t, weights, names);
 end
-
+ 
 
 % -------------------------------
 %  Author: Vida Feizi
